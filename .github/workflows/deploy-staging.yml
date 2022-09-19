@@ -85,28 +85,28 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           
-  Deploy-to-Azure:
-    runs-on: ubuntu-latest
-    needs: Build-Docker-Image
-    name: Deploy app container to Azure
-    steps:
-      - name: "Login via Azure CLI"
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+#   Deploy-to-Azure:
+#     runs-on: ubuntu-latest
+#     needs: Build-Docker-Image
+#     name: Deploy app container to Azure
+#     steps:
+#       - name: "Login via Azure CLI"
+#         uses: azure/login@v1
+#         with:
+#           creds: ${{ secrets.AZURE_CREDENTIALS }}
           
-      - uses: azure/docker-login@v1
-        with:
-          login-server: ${{env.IMAGE_REGISTRY_URL}}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+#       - uses: azure/docker-login@v1
+#         with:
+#           login-server: ${{env.IMAGE_REGISTRY_URL}}
+#           username: ${{ github.actor }}
+#           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy web app container
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{env.AZURE_WEBAPP_NAME}}
-          images: ${{env.IMAGE_REGISTRY_URL}}/${{ github.repository }}/${{env.DOCKER_IMAGE_NAME}}:${{ github.sha }}
+#       - name: Deploy web app container
+#         uses: azure/webapps-deploy@v2
+#         with:
+#           app-name: ${{env.AZURE_WEBAPP_NAME}}
+#           images: ${{env.IMAGE_REGISTRY_URL}}/${{ github.repository }}/${{env.DOCKER_IMAGE_NAME}}:${{ github.sha }}
 
-      - name: Azure logout
-        run: |
-          az logout
+#       - name: Azure logout
+#         run: |
+#           az logout
