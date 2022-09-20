@@ -45,7 +45,7 @@ jobs:
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v3
         with:
-          name: python-app
+          name: ${{env.DOCKER_IMAGE_NAME}}
           path: .
           
   Build-Docker-Image:
@@ -59,7 +59,7 @@ jobs:
       - name: Download built artifact
         uses: actions/download-artifact@main
         with:
-          name: python-app
+          name: ${{env.DOCKER_IMAGE_NAME}}
           path: .
 
       - name: Log in to GHCR
