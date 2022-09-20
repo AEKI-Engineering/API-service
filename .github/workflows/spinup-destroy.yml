@@ -11,6 +11,9 @@ env:
  AZURE_LOCATION: '"Central US"'
  AZURE_WEBAPP_NAME: macieopi-ttt-app
  DOCKER_IMAGE_NAME: macieopi-azure-ttt
+ PYTHON_VERSION: '3.10' 
+ WORKING_DIRECTORY: '.'
+ STARTUP_COMMAND: 'uvicorn src.main:app --host 0.0.0.0'
  
 jobs:
  setup-up-azure-resources:
@@ -53,11 +56,20 @@ jobs:
        run: |
          az webapp config container set --docker-custom-image-name nginx --docker-registry-server-password ${{secrets.CR_PAT}} --docker-registry-server-url https://${{env.IMAGE_REGISTRY_URL}} --docker-registry-server-user ${{github.actor}} --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
 
+     - uses: azure/appservice-settings@v1
+       with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        mask-inputs: false
+        general-settings-json: '{"linuxFxVersion": "PYTHON|${{ env.PYTHON_VERSION }}"}' #'General configuration settings as Key Value pairs'
+  
+
      - name: Deploy web app container
        uses: azure/webapps-deploy@v2
        with:
           app-name: ${{env.AZURE_WEBAPP_NAME}}
+          package: ${{ env.WORKING_DIRECTORY }}
           images: ${{env.IMAGE_REGISTRY_URL}}/${{ github.repository }}/${{env.DOCKER_IMAGE_NAME}}:${{ github.sha }}
+          startup-command: ${{ env.STARTUP_COMMAND }}
 
      - name: Azure logout
        run: |
