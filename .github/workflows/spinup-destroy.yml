@@ -32,6 +32,11 @@ jobs:
           login-server: ${{env.IMAGE_REGISTRY_URL}}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+          
+     - name: Create webapp resource
+       if: success()
+       run: |
+         az webapp create --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --plan ${{ env.AZURE_APP_PLAN }} --name ${{ env.AZURE_WEBAPP_NAME }}  --deployment-container-image-name nginx --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
 
      - name: Deploy web app container
        uses: azure/webapps-deploy@v2
