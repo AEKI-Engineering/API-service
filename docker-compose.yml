@@ -1,6 +1,0 @@
-version: '3.10'
-services:
-  api_service:
-    build: ./
-    ports:
-      - "8000:80"
