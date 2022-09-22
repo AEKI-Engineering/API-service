@@ -68,7 +68,7 @@ jobs:
        with:
           app-name: ${{env.AZURE_WEBAPP_NAME}}
           package: ${{ env.WORKING_DIRECTORY }}
-          images: ${{env.IMAGE_REGISTRY_URL}}/${{ github.repository }}/${{env.DOCKER_IMAGE_NAME}}:${{ github.sha }}
+          images: ${{env.IMAGE_REGISTRY_URL}}/${{ lower(github.repository) }}/${{env.DOCKER_IMAGE_NAME}}:${{ github.sha }}
           startup-command: ${{ env.STARTUP_COMMAND }}
 
      - name: Azure logout
