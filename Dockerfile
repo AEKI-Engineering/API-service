@@ -14,6 +14,6 @@ RUN pip install --no-cache-dir --upgrade -r ./requirements.txt
 COPY ./src ./src
 
 ENV PORT=8000
-EXPOSE 8000
+EXPOSE 80
 
 CMD ["python", "src.main.py"]
