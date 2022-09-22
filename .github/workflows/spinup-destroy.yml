@@ -14,6 +14,7 @@ env:
  PYTHON_VERSION: '3.10' 
  WORKING_DIRECTORY: '.'
  STARTUP_COMMAND: 'uvicorn src.main:app --host 0.0.0.0'
+ REPOSITORY_NAME: 'aeki-engineering/api-service'
  
 jobs:
  setup-up-azure-resources:
@@ -68,7 +69,7 @@ jobs:
        with:
           app-name: ${{env.AZURE_WEBAPP_NAME}}
           package: ${{ env.WORKING_DIRECTORY }}
-          images: ${{env.IMAGE_REGISTRY_URL}}/${{ lower(github.repository) }}/${{env.DOCKER_IMAGE_NAME}}:${{ github.sha }}
+          images: ${{env.IMAGE_REGISTRY_URL}}/${{ env.REPOSITORY_NAME }}/${{env.DOCKER_IMAGE_NAME}}:${{ github.sha }}
           startup-command: ${{ env.STARTUP_COMMAND }}
 
      - name: Azure logout
