@@ -1,4 +1,4 @@
-FROM tiangolo/uvicorn-gunicorn: python:3.9-slim as requirements-stage
+FROM tiangolo/uvicorn-gunicorn:python3.9-slim as requirements-stage
 
 WORKDIR /tmp
 
