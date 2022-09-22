@@ -13,4 +13,7 @@ COPY --from=requirements-stage /tmp/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir --upgrade -r ./requirements.txt
 COPY ./src ./src
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "80"]
+ENV PORT=8000
+EXPOSE 8000
+
+CMD ["python", "src.main.py"]
