@@ -13,7 +13,7 @@ env:
  DOCKER_IMAGE_NAME: macieopi-azure-ttt
  PYTHON_VERSION: '3.10' 
  WORKING_DIRECTORY: '.'
- STARTUP_COMMAND: 'uvicorn src.main:app --host 0.0.0.0'
+ STARTUP_COMMAND: ''
  REPOSITORY_NAME: 'aeki-engineering/api-service'
  
 jobs:
