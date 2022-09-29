@@ -22,6 +22,7 @@ FROM base as final
 COPY --from=build /venv /venv
 COPY docker-entrypoint.sh ./
 COPY ./src ./src
+COPY ./static ./static
 
 RUN chmod +x ./docker-entrypoint.sh
 CMD [ "./docker-entrypoint.sh" ]
