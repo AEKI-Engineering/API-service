@@ -4,10 +4,12 @@ version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-packages = []
+packages = [
+    { include = "src" }
+]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.9"
 fastapi = "^0.81.0"
 uvicorn = "^0.18.3"
 pytest = "^7.1.3"

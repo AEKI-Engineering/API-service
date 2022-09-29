@@ -1,16 +1,27 @@
-FROM python:3.9-slim as requirements-stage
+FROM tiangolo/uvicorn-gunicorn:python3.9-slim as base
+
+ENV PYTHONFAULTHANDLER=1 \
+    PYTHONHASHSEED=random \
+    PYTHONUNBUFFERED=1
 
 WORKDIR /tmp
 
+FROM base as build
+
 RUN pip install poetry
-COPY ./pyproject.toml ./poetry.lock* /tmp/
+RUN python -m venv /venv
 
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
+COPY pyproject.toml poetry.lock ./
+RUN poetry export -f requirements.txt | /venv/bin/pip install -r /dev/stdin
 
-FROM python:3.9-slim
+COPY . .
+RUN poetry build && /venv/bin/pip install dist/*.whl
 
-COPY --from=requirements-stage /tmp/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir --upgrade -r ./requirements.txt
+FROM base as final
+
+COPY --from=build /venv /venv
+COPY docker-entrypoint.sh ./
 COPY ./src ./src
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "80"]
+RUN chmod +x ./docker-entrypoint.sh
+CMD [ "./docker-entrypoint.sh" ]
