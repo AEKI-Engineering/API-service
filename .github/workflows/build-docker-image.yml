@@ -7,8 +7,8 @@ on:
     
 env:
   IMAGE_REGISTRY_URL: ghcr.io
-  DOCKER_IMAGE_NAME: macieopi-azure-ttt
-  AZURE_WEBAPP_NAME: macieopi-ttt-app
+  DOCKER_IMAGE_NAME: aeki-api-service-azure
+  AZURE_WEBAPP_NAME: aeki-api-service
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:  
