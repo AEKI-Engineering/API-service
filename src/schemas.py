@@ -20,14 +20,14 @@ class ImageURL(BaseImageModel):
     __root__: UrlType
 
     def to_pil_image(self) -> Image:
-        return Image.open(BytesIO(requests.get(self.__root__).content))
+        return Image.open(BytesIO(requests.get(self.__root__).content)).convert('RGB')
 
 
 class ImageBytes(BaseImageModel):
     __root__: BytesType
 
     def to_pil_image(self) -> Image:
-        return Image.open(BytesIO(base64.b64encode(self.__root__)))
+        return Image.open(BytesIO(base64.b64encode(self.__root__))).convert('RGB')
 
 class CoordinatesModel(BaseModel):
     x: float

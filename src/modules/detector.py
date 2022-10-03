@@ -1,3 +1,4 @@
+import json
 from typing import List, Tuple, Union
 from pathlib import Path
 from typing import Any, Dict
@@ -23,13 +24,41 @@ class Detector:
 
         self.device = torch.device("cpu")
 
-        self.model = torch.load(Path(weights_path))
-        self.stride = int(32)
+        # Detect backend
+        self.backend = Path(weights_path).suffix.lower()
+
+        if self.backend == ".torchscript":
+            # TorchScript backend stores stride and names in config file
+            extra_files = {"config.txt": ""}
+            self.model = torch.jit.load(Path(weights_path), _extra_files=extra_files)
+            if extra_files["config.txt"]:  # load metadata dict
+                data = json.loads(
+                    extra_files["config.txt"],
+                    object_hook=lambda data: {
+                        int(k) if k.isdigit() else k: v for k, v in data.items()
+                    },
+                )
+                self.stride, self.names = int(data["stride"]), data["names"]
+            else:
+                self.stride = 32
+                self.names = None
+        elif self.backend == ".pt":
+            # PyTorch format needs class in working directory
+            self.model = torch.load(Path(weights_path))
+            self.stride = max(int(self.model.stride.max()), 32)
+            self.names = self.model.names
+        else:
+            raise AttributeError(f"Unsupported backend type: {self.backend}")
 
     @torch.no_grad()
     def predict(self, x: Union[List[BaseImageModel], BaseImageModel]) -> Dict[str, Any]:
         # Load Images
-        dataset = ImagesLoader(files=x, img_size=self.img_size, stride=self.stride)
+        dataset = ImagesLoader(
+            files=x,
+            img_size=self.img_size,
+            stride=self.stride,
+            auto=False if self.backend == ".torchscript" else True,
+        )
 
         results = []
         for _, img, img0s, _ in dataset:
@@ -47,7 +76,7 @@ class Detector:
 
     def _image_to_tensor(self, img: np.ndarray) -> torch.Tensor:
         img = torch.from_numpy(img).to(self.device)
-        img = img / 255
+        img = img / 255.0
         if len(img.shape) == 3:
             img = img[None]
         return img
@@ -55,12 +84,14 @@ class Detector:
     def _detect_image(self, img_tensor: torch.Tensor) -> Any:
         detections = self.model(img_tensor)[0]
         return non_max_suppression(
-                detections,
-                conf_thres=self.confidence_threshold,
-                iou_thres=self.iou_threshold,
-            )
+            detections,
+            conf_thres=self.confidence_threshold,
+            iou_thres=self.iou_threshold,
+        )
 
-    def _process_detection(self, detection: torch.Tensor, image: np.ndarray, img_tensor: torch.Tensor) -> List[Any]:
+    def _process_detection(
+        self, detection: torch.Tensor, image: np.ndarray, img_tensor: torch.Tensor
+    ) -> List[Any]:
         all_detections = []
         gain = torch.tensor(image.shape)[[1, 0, 1, 0]]
 
@@ -80,17 +111,24 @@ class Detector:
                     gain,
                 )
                 all_detections.append(result)
-        
+
         return all_detections
 
-    def _prepare_results(self, xyxy: Tuple[torch.Tensor], confidence_score: torch.Tensor, detected_class: torch.Tensor, gain: torch.Tensor) -> Dict[str, Any]:
+    def _prepare_results(
+        self,
+        xyxy: Tuple[torch.Tensor],
+        confidence_score: torch.Tensor,
+        detected_class: torch.Tensor,
+        gain: torch.Tensor,
+    ) -> Dict[str, Any]:
         normalized_xyxy = (torch.tensor(xyxy).view(1, 4) / gain).view(-1).tolist()
 
         x0, y0, x1, y1 = normalized_xyxy[:4]
 
         return {
-            # "name": self.model.names[int(detected_class.item())],
-            "name": int(detected_class.item()),
+            "name": self.names[int(detected_class.item())]
+            if self.names
+            else int(detected_class.item()),
             "score": round(confidence_score.item(), 2),
             "boundingBox": [
                 {"x": x0, "y": y0},
@@ -99,4 +137,3 @@ class Detector:
                 {"x": x0, "y": y1},
             ],
         }
-
