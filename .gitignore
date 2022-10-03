@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# models should not be stored in git
+models/*
+!models/.gitkeep
