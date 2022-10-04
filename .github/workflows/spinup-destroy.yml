@@ -62,7 +62,24 @@ jobs:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         mask-inputs: false
         general-settings-json: '{"linuxFxVersion": "PYTHON|${{ env.PYTHON_VERSION }}"}' #'General configuration settings as Key Value pairs'
-  
+        app-settings-json: |
+         [
+             {
+                 "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
+                 "value": "${{ secrets.REGISTRY_PASSWORD }}",
+                 "slotSetting": false
+             },
+             {
+                 "name": "DOCKER_REGISTRY_SERVER_URL",
+                 "value": "https://contoso.azurecr.io",
+                 "slotSetting": false
+             },
+             {
+                 "name": "DOCKER_REGISTRY_SERVER_USERNAME",
+                 "value": "${{ secrets.REGISTRY_USERNAME  }}",
+                 "slotSetting": false
+             }
+         ]
 
      - name: Deploy web app container
        uses: azure/webapps-deploy@v2
