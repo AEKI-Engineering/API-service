@@ -34,8 +34,8 @@ jobs:
      - uses: azure/docker-login@v1
        with:
           login-server: ${{env.IMAGE_REGISTRY_URL}}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
           
      - name: Create Azure resource group
        if: success()
