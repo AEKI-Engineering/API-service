@@ -5,7 +5,7 @@ on:
    types: [labeled]
  
 env:
- IMAGE_REGISTRY_URL: ghcr.io
+ IMAGE_REGISTRY_URL: aekiengineering.azurecr.io
  AZURE_RESOURCE_GROUP: aeki-with-actions
  AZURE_APP_PLAN: aeki-api-service-deployment
  AZURE_LOCATION: '"Central US"'
