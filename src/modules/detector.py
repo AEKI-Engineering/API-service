@@ -6,6 +6,9 @@ import numpy as np
 import torch
 from src.modules.loaders import ImagesLoader
 from src.modules.utils import non_max_suppression, scale_coords
+from src.logger import get_logger
+
+log = get_logger(__name__)
 
 from src.schemas import BaseImageModel
 
@@ -22,7 +25,8 @@ class Detector:
         self.confidence_threshold = confidence_threshold
         self.iou_threshold = iou_threshold
 
-        self.device = torch.device("cpu")
+        self.device_name = "cpu"
+        self.device = torch.device(self.device_name)
 
         # Detect backend
         self.backend = Path(weights_path).suffix.lower()
@@ -49,6 +53,8 @@ class Detector:
             self.names = self.model.names
         else:
             raise AttributeError(f"Unsupported backend type: {self.backend}")
+
+        log.info(f"Initializing detector class, backend='{self.backend}', device='{self.device_name}'")
 
     @torch.no_grad()
     def predict(self, x: Union[List[BaseImageModel], BaseImageModel]) -> Dict[str, Any]:
