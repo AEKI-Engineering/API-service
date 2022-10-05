@@ -71,7 +71,7 @@ jobs:
              },
              {
                  "name": "DOCKER_REGISTRY_SERVER_URL",
-                 "value": "https://contoso.azurecr.io",
+                 "value": "${{ env.IMAGE_REGISTRY_URL }}",
                  "slotSetting": false
              },
              {
