@@ -1,0 +1,2 @@
+class WeightsNotFound(Exception):
+    pass

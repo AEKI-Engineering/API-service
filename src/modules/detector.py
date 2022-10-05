@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, Dict
 import numpy as np
 import torch
+from src.exceptions import WeightsNotFound
 from src.modules.loaders import ImagesLoader
 from src.modules.utils import non_max_suppression, scale_coords
 from src.logger import get_logger
@@ -27,9 +28,14 @@ class Detector:
 
         self.device_name = "cpu"
         self.device = torch.device(self.device_name)
+        self.weights_path = Path(weights_path)
+
+        # Raise if model file does not exist
+        if not self.weights_path.exists():
+            raise WeightsNotFound(f"Weights file does not exist.")
 
         # Detect backend
-        self.backend = Path(weights_path).suffix.lower()
+        self.backend = self.weights_path.suffix.lower()
 
         if self.backend == ".torchscript":
             # TorchScript backend stores stride and names in config file

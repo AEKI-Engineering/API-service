@@ -1,9 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import (
     get_swagger_ui_html,
     get_swagger_ui_oauth2_redirect_html,
 )
+from fastapi.responses import JSONResponse
+
+from src.exceptions import WeightsNotFound
 from .routers import v1
 from .config import settings
 
@@ -63,6 +66,10 @@ async def custom_swagger_ui_html():
 @app.get(app.swagger_ui_oauth2_redirect_url, include_in_schema=False)
 async def swagger_ui_redirect():
     return get_swagger_ui_oauth2_redirect_html()
+
+@app.exception_handler(WeightsNotFound)
+async def weights_not_found_handler(request: Request, exc: WeightsNotFound):
+    return JSONResponse(status_code=503, content={"message": str(exc)})
 
 @app.get("/", name="Index", description="Returns name of the API.")
 async def root():
