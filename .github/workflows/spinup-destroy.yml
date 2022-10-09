@@ -80,6 +80,10 @@ jobs:
                  "slotSetting": false
              }
          ]
+         connection-strings-json: | 
+           {
+             WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+           }
 
      - name: Deploy web app container
        uses: azure/webapps-deploy@v2       
@@ -88,10 +92,6 @@ jobs:
           package: ${{ env.WORKING_DIRECTORY }}
           images: ${{env.IMAGE_REGISTRY_URL}}/${{ env.REPOSITORY_NAME }}/${{env.DOCKER_IMAGE_NAME}}:latest
           startup-command: ${{ env.STARTUP_COMMAND }}
-          app-settings-json: | 
-           {
-             WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
-           }
 
      - name: Azure logout
        run: |
