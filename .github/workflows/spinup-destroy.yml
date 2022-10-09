@@ -83,7 +83,9 @@ jobs:
          connection-strings-json: | 
          [
            {
-             WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+                 "name": "WANDB_API_KEY",
+                 "value": " ${{ secrets.WANDB_API_KEY }}",
+                 "slotSetting": false
            }
          ]
 
