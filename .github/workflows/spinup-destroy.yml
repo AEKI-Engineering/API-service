@@ -83,6 +83,8 @@ jobs:
 
      - name: Deploy web app container
        uses: azure/webapps-deploy@v2
+       env:
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
        with:
           app-name: ${{env.AZURE_WEBAPP_NAME}}
           package: ${{ env.WORKING_DIRECTORY }}
