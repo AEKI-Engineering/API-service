@@ -78,17 +78,14 @@ jobs:
                  "name": "DOCKER_REGISTRY_SERVER_USERNAME",
                  "value": "${{ secrets.REGISTRY_USERNAME  }}",
                  "slotSetting": false
+             },
+             {
+                 "name": "WANDB_API_KEY",
+                 "value": "${{ secrets.WANDB_API_KEY }}",
+                 "slotSetting": false
              }
          ]
-         connection-strings-json: | 
-         [
-           {
-                 "name": "WANDB_API_KEY",
-                 "value": " ${{ secrets.WANDB_API_KEY }}",
-                 "slotSetting": false
-           }
-         ]
-
+      
      - name: Deploy web app container
        uses: azure/webapps-deploy@v2       
        with:
