@@ -81,9 +81,11 @@ jobs:
              }
          ]
          connection-strings-json: | 
+         [
            {
              WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
            }
+         ]
 
      - name: Deploy web app container
        uses: azure/webapps-deploy@v2       
