@@ -1,7 +1,5 @@
 import base64
 from typing import List, Tuple, Union
-import cv2
-from cv2 import Mat
 import numpy as np
 
 from src.schemas import BaseImageModel
@@ -28,7 +26,7 @@ class ImagesLoader:
         self.count = 0
         return self
 
-    def __next__(self) -> Tuple[str, np.ndarray, Mat, str]:
+    def __next__(self) -> Tuple[str, np.ndarray, np.ndarray, str]:
         if self.count == self.nf:
             raise StopIteration
 

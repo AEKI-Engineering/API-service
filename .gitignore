@@ -131,3 +131,6 @@ dmypy.json
 # models should not be stored in git
 models/*
 !models/.gitkeep
+
+# Local files
+local/*

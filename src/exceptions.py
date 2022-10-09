@@ -1,2 +1,2 @@
-class WeightsNotFound(Exception):
+class ModelNotFound(Exception):
     pass
