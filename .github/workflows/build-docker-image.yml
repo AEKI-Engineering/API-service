@@ -6,9 +6,9 @@ on:
     types: [labeled]
     
 env:
-  IMAGE_REGISTRY_URL: ghcr.io
-  DOCKER_IMAGE_NAME: macieopi-azure-ttt
-  AZURE_WEBAPP_NAME: macieopi-ttt-app
+  IMAGE_REGISTRY_URL: aekiengineering.azurecr.io
+  DOCKER_IMAGE_NAME: aeki-api-service-azure
+  AZURE_WEBAPP_NAME: aeki-api-service
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:  
@@ -27,11 +27,11 @@ jobs:
           platform: "linux/amd64"
 
       - name: Log in to GHCR
-        uses: docker/login-action@v1.14.1
+        uses: azure/docker-login@v1
         with:
-          registry: ${{ env.IMAGE_REGISTRY_URL }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          login-server: ${{env.IMAGE_REGISTRY_URL}}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -39,7 +39,8 @@ jobs:
         with:
           images: ${{env.IMAGE_REGISTRY_URL}}/${{ github.repository }}/${{env.DOCKER_IMAGE_NAME}}
           tags: |
-            type=sha,format=long,prefix=
+            type=raw,value=latest
+#           type=sha,format=long,prefix=,sufix=latest
             
       - name: Build and push Docker image
         uses: docker/build-push-action@v2.10.0

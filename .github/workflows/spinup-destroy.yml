@@ -5,12 +5,12 @@ on:
    types: [labeled]
  
 env:
- IMAGE_REGISTRY_URL: ghcr.io
- AZURE_RESOURCE_GROUP: cd-with-actions
- AZURE_APP_PLAN: actions-ttt-deployment
+ IMAGE_REGISTRY_URL: aekiengineering.azurecr.io
+ AZURE_RESOURCE_GROUP: aeki-with-actions
+ AZURE_APP_PLAN: aeki-api-service-deployment
  AZURE_LOCATION: '"Central US"'
- AZURE_WEBAPP_NAME: macieopi-ttt-app
- DOCKER_IMAGE_NAME: macieopi-azure-ttt
+ AZURE_WEBAPP_NAME: aeki-api-service
+ DOCKER_IMAGE_NAME: aeki-api-service-azure
  PYTHON_VERSION: '3.10' 
  WORKING_DIRECTORY: '.'
  STARTUP_COMMAND: ''
@@ -29,13 +29,13 @@ jobs:
      - name: Azure login
        uses: azure/login@v1
        with:
-         creds: ${{ secrets.AZURE_CREDENTIALS }}
+         creds: ${{ secrets.AZURE_CONTAINER_CREDENTIALS }}
          
      - uses: azure/docker-login@v1
        with:
           login-server: ${{env.IMAGE_REGISTRY_URL}}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
           
      - name: Create Azure resource group
        if: success()
@@ -62,14 +62,36 @@ jobs:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         mask-inputs: false
         general-settings-json: '{"linuxFxVersion": "PYTHON|${{ env.PYTHON_VERSION }}"}' #'General configuration settings as Key Value pairs'
-  
-
+        app-settings-json: |
+         [
+             {
+                 "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
+                 "value": "${{ secrets.REGISTRY_PASSWORD }}",
+                 "slotSetting": false
+             },
+             {
+                 "name": "DOCKER_REGISTRY_SERVER_URL",
+                 "value": "${{ env.IMAGE_REGISTRY_URL }}",
+                 "slotSetting": false
+             },
+             {
+                 "name": "DOCKER_REGISTRY_SERVER_USERNAME",
+                 "value": "${{ secrets.REGISTRY_USERNAME  }}",
+                 "slotSetting": false
+             },
+             {
+                 "name": "WANDB_API_KEY",
+                 "value": "${{ secrets.WANDB_API_KEY }}",
+                 "slotSetting": false
+             }
+         ]
+      
      - name: Deploy web app container
-       uses: azure/webapps-deploy@v2
+       uses: azure/webapps-deploy@v2       
        with:
           app-name: ${{env.AZURE_WEBAPP_NAME}}
           package: ${{ env.WORKING_DIRECTORY }}
-          images: ${{env.IMAGE_REGISTRY_URL}}/${{ env.REPOSITORY_NAME }}/${{env.DOCKER_IMAGE_NAME}}:${{ github.sha }}
+          images: ${{env.IMAGE_REGISTRY_URL}}/${{ env.REPOSITORY_NAME }}/${{env.DOCKER_IMAGE_NAME}}:latest
           startup-command: ${{ env.STARTUP_COMMAND }}
 
      - name: Azure logout

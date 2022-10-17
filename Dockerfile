@@ -19,9 +19,13 @@ RUN poetry build && /venv/bin/pip install dist/*.whl
 
 FROM base as final
 
+RUN apt-get update && apt-get install -y python3-opencv
+
 COPY --from=build /venv /venv
 COPY docker-entrypoint.sh ./
 COPY ./src ./src
+COPY ./static ./static
+COPY ./models ./models
 
 RUN chmod +x ./docker-entrypoint.sh
 CMD [ "./docker-entrypoint.sh" ]
