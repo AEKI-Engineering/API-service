@@ -10,8 +10,11 @@ from src.config import settings
 
 log = get_logger(__name__)
 
-class Model():
-    def __init__(self, model_root: str, tag: str, backend: str, cache: bool = True) -> None:
+
+class Model:
+    def __init__(
+        self, model_root: str, tag: str, backend: str, cache: bool = True
+    ) -> None:
         self.model_root = model_root
         self.tag = tag
         self.cache = cache
@@ -29,7 +32,9 @@ class Model():
         # Serve model from cache if exists
         if self.cache and Path(self.model_root, self.tag).is_dir():
             try:
-                model_path = list(Path(self.model_root, self.tag).glob(f"*.{self.backend}"))[0]
+                model_path = list(
+                    Path(self.model_root, self.tag).glob(f"*.{self.backend}")
+                )[0]
                 log.info(f"Serving model from local cache...")
             except IndexError:
                 # Silently pass and serve model from model registry
@@ -42,12 +47,16 @@ class Model():
 
             # Download tag artifacts
             log.info("Fetching model from WandB model registry...")
-            artifact = api.artifact(f"{settings.WANDB_ENTITY}/{settings.WANDB_PROJECT}/{settings.WANDB_REGISTERED_MODEL}:{self.tag}")
+            artifact = api.artifact(
+                f"{settings.WANDB_ENTITY}/{settings.WANDB_PROJECT}/{settings.WANDB_REGISTERED_MODEL}:{self.tag}"
+            )
             artifact.download(root=f"{self.model_root}/{self.tag}")
 
             # Get model path
             try:
-                model_path = list(Path(self.model_root, self.tag).glob(f"*.{self.backend}"))[0]
+                model_path = list(
+                    Path(self.model_root, self.tag).glob(f"*.{self.backend}")
+                )[0]
             except IndexError:
                 log.error(f"Failed to fetch model for backend='{self.backend}'")
                 return None, None, None
@@ -77,7 +86,11 @@ class Model():
             return None, None, None
 
         if names:
-            log.info(f"Successfully loaded '{self.backend}' model, with stride='{stride}' and {len(names)} classes.")
+            log.info(
+                f"Successfully loaded '{self.backend}' model, with stride='{stride}' and {len(names)} classes."
+            )
         else:
-            log.info(f"Successfully loaded '{self.backend}' model, with stride='{stride}'")
+            log.info(
+                f"Successfully loaded '{self.backend}' model, with stride='{stride}'"
+            )
         return model, stride, names

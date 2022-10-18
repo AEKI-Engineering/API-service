@@ -36,22 +36,15 @@ app = FastAPI(
     openapi_tags=[
         {"name": "latest", "description": "Uses latest version of the API."},
         {"name": "v1", "description": "Uses version 1 of the API."},
-    ]
+    ],
 )
 
-app.include_router(
-    v1.router,
-    prefix=settings.API_LATERST_PREFIX,
-    tags=["latest"]
-)
+app.include_router(v1.router, prefix=settings.API_LATERST_PREFIX, tags=["latest"])
 
-app.include_router(
-    v1.router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["v1"]
-)
+app.include_router(v1.router, prefix=settings.API_V1_PREFIX, tags=["v1"])
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
@@ -60,16 +53,19 @@ async def custom_swagger_ui_html():
         title=app.title + " - docs",
         oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
         swagger_css_url="/static/swagger-ui.css",
-        swagger_favicon_url="/static/aeki-chair-white.png"
+        swagger_favicon_url="/static/aeki-chair-white.png",
     )
+
 
 @app.get(app.swagger_ui_oauth2_redirect_url, include_in_schema=False)
 async def swagger_ui_redirect():
     return get_swagger_ui_oauth2_redirect_html()
 
+
 @app.exception_handler(ModelNotFound)
 async def weights_not_found_handler(request: Request, exc: ModelNotFound):
     return JSONResponse(status_code=503, content={"message": str(exc)})
+
 
 @app.get("/", name="Index", description="Returns name of the API.")
 async def root():

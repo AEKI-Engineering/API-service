@@ -30,7 +30,7 @@ class Detector:
         self.iou_threshold = iou_threshold
 
         self.model = model()
-        
+
         if not self.model:
             raise ModelNotFound(f"Model could not be loaded.")
 
@@ -40,7 +40,9 @@ class Detector:
 
         self.device = torch.device(settings.MODEL_DEVICE)
 
-        log.info(f"Initializing detector class, backend='{self.backend}', device='{settings.MODEL_DEVICE}'")
+        log.info(
+            f"Initializing detector class, backend='{self.backend}', device='{settings.MODEL_DEVICE}'"
+        )
 
     @torch.no_grad()
     def predict(self, x: Union[List[BaseImageModel], BaseImageModel]) -> Dict[str, Any]:

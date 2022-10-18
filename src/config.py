@@ -1,5 +1,6 @@
 from pydantic import BaseSettings
 
+
 class Settings(BaseSettings):
     # TODO: Get version from pyproject.toml file
     APP_VERSION: str = "0.1.0"
@@ -32,12 +33,13 @@ class Settings(BaseSettings):
     # Model
     MODEL_DIR: str = "models"
     MODEL_DEVICE: str = "cpu"
-    MODEL_DEFAULT_BACKEND: str = 'torchscript'
+    MODEL_DEFAULT_BACKEND: str = "torchscript"
 
     # WandB
     WANDB_ENTITY: str = "aeki-engineering"
     WANDB_PROJECT: str = "model-registry"
     WANDB_REGISTERED_MODEL: str = "yolov5"
     WANDB_DEFAULT_TAG: str = "latest"
+
 
 settings = Settings()
