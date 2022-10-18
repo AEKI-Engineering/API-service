@@ -45,7 +45,9 @@ class Detector:
         )
 
     @torch.no_grad()
-    def predict(self, x: Union[List[BaseImageModel], BaseImageModel]) -> Dict[str, Any]:
+    def predict(
+        self, x: Union[List[BaseImageModel], BaseImageModel]
+    ) -> List[Dict[str, Any]]:
         # Load Images
         dataset = ImagesLoader(
             files=x,
@@ -66,7 +68,7 @@ class Detector:
             for detection in all_detections:
                 results += self._process_detection(detection, img0s.copy(), img_tensor)
 
-        return {"results": results}
+        return results
 
     def _image_to_tensor(self, img: np.ndarray) -> torch.Tensor:
         img = torch.from_numpy(img).to(self.device)
