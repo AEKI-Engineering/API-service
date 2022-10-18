@@ -23,6 +23,7 @@ torch = "^1.12.1"
 
 [tool.poetry.group.dev.dependencies]
 black = {version = "^22.8.0", allow-prereleases = true}
+pre-commit = "^2.20.0"
 
 [build-system]
 requires = ["poetry-core"]

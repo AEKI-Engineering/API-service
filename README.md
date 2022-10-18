@@ -10,3 +10,11 @@ Install Python dependencies with Poetry:
 poetry install
 poetry shell
 ```
+
+# Contributing
+
+Prior to any development install pre-commit hooks:
+
+```sh
+pre-commit install
+```
