@@ -55,7 +55,8 @@ jobs:
 
   setup-up-azure-resources:
    runs-on: ubuntu-latest
- 
+   needs: Build-Docker-Image
+   
    if: contains(github.event.pull_request.labels.*.name, 'spin up environment')
  
    steps:
