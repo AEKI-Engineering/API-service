@@ -8,7 +8,6 @@ from PIL import Image
 import requests
 
 UrlType = constr(regex="(https|http)?:\/\/.+")
-BytesType = conbytes()
 
 
 class BaseImageModel(ABC, BaseModel):
@@ -25,10 +24,10 @@ class ImageURL(BaseImageModel):
 
 
 class ImageBytes(BaseImageModel):
-    __root__: BytesType
+    __root__: bytes
 
     def to_pil_image(self) -> Image:
-        return Image.open(BytesIO(base64.b64encode(self.__root__))).convert("RGB")
+        return Image.open(BytesIO(base64.b64decode(self.__root__))).convert("RGB")
 
 
 class CoordinatesModel(BaseModel):
