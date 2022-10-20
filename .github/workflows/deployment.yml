@@ -17,7 +17,43 @@ env:
  REPOSITORY_NAME: 'aeki-engineering/api-service'
  
 jobs:
- setup-up-azure-resources:
+  Build-Docker-Image:
+    if: contains(github.event.pull_request.labels.*.name, 'build&push')
+    
+    runs-on: ubuntu-latest
+    name: Build image and store in GitHub Container Registry
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          platform: "linux/amd64"
+
+      - name: Log in to Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{env.IMAGE_REGISTRY_URL}}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v3.7.0
+        with:
+          images: ${{env.IMAGE_REGISTRY_URL}}/${{ github.repository }}/${{env.DOCKER_IMAGE_NAME}}
+          tags: |
+            type=raw,value=latest            
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2.10.0
+        with:
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  setup-up-azure-resources:
    runs-on: ubuntu-latest
  
    if: contains(github.event.pull_request.labels.*.name, 'spin up environment')
@@ -98,27 +134,7 @@ jobs:
        run: |
          az logout
  
-#      - name: Create Azure resource group
-#        if: success()
-#        run: |
-#          az group create --location ${{env.AZURE_LOCATION}} --name ${{env.AZURE_RESOURCE_GROUP}} --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
- 
-#      - name: Create Azure app service plan
-#        if: success()
-#        run: |
-#          az appservice plan create --resource-group ${{env.AZURE_RESOURCE_GROUP}} --name ${{env.AZURE_APP_PLAN}} --is-linux --sku F1 --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
- 
-#      - name: Create webapp resource
-#        if: success()
-#        run: |
-#          az webapp create --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --plan ${{ env.AZURE_APP_PLAN }} --name ${{ env.AZURE_WEBAPP_NAME }}  --deployment-container-image-name nginx --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
- 
-#      - name: Configure webapp to use GHCR
-#        if: success()
-#        run: |
-#          az webapp config container set --docker-custom-image-name nginx --docker-registry-server-password ${{secrets.CR_PAT}} --docker-registry-server-url https://${{env.IMAGE_REGISTRY_URL}} --docker-registry-server-user ${{github.actor}} --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
- 
- destroy-azure-resources:
+  destroy-azure-resources:
    runs-on: ubuntu-latest
  
    if: contains(github.event.pull_request.labels.*.name, 'destroy environment')
