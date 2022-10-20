@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import base64
 from io import BytesIO
-from typing import Any, List, Union
+from typing import Any, Dict, List, Union
 from pydantic import BaseModel, constr, conbytes
 
 from PIL import Image
@@ -42,9 +42,24 @@ class DetectionModel(BaseModel):
     boundingBox: List[CoordinatesModel]
 
 
+class BatchDetectionModel(BaseModel):
+    source: str
+    detections: List[DetectionModel]
+
+
 class PredictRequest(BaseModel):
     image: Union[ImageURL, ImageBytes]
 
 
+class PredictBatchRequest(BaseModel):
+    images: List[Union[ImageURL, ImageBytes]]
+
+
 class PredictResponse(BaseModel):
     detections: List[DetectionModel]
+    time: float
+
+
+class PredictBatchResponse(BaseModel):
+    batchResults: List[BatchDetectionModel]
+    time: float

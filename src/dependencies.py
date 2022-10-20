@@ -11,5 +11,7 @@ def get_detector():
             model_root=settings.MODEL_DIR,
             tag=settings.WANDB_DEFAULT_TAG,
             backend=settings.MODEL_DEFAULT_BACKEND,
-        )
+        ),
+        confidence_threshold=settings.DEFAULT_CONFIDENCE_THRESHOLD,
+        iou_threshold=settings.DEFAULT_IOU_THRESHOLD,
     )
