@@ -39,7 +39,7 @@ name: "Deploy App to azure"
 runs:
    using: "composite"
    steps:
-    - name: Azure login
+     - name: Azure login
        uses: azure/login@v1
        with:
          creds: ${{ secrets.AZURE_CONTAINER_CREDENTIALS }}
