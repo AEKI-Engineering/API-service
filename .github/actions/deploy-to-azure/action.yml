@@ -1,8 +1,7 @@
 name: "Deploy App to azure"
 inputs:
    WEBAPP_NAME:
-      required: false
-      default: ${{ env.AZURE_WEBAPP_NAME }}
+      required: true     
    AZURE_CONTAINER_CREDENTIALS:
       required: true
    AZURE_SUBSCRIPTION_ID:
