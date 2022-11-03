@@ -51,11 +51,11 @@ runs:
        shell: bash
        if: success()
        run: |
-         az webapp config container set --docker-custom-image-name nginx --docker-registry-server-password ${{inputs.CR_PAT}} --docker-registry-server-url https://${{env.IMAGE_REGISTRY_URL}} --docker-registry-server-user ${{github.actor}} --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --subscription ${{inputs.AZURE_SUBSCRIPTION_ID}}
+         az webapp config container set --docker-custom-image-name nginx --docker-registry-server-password ${{inputs.CR_PAT}} --docker-registry-server-url https://${{env.IMAGE_REGISTRY_URL}} --docker-registry-server-user ${{github.actor}} --name ${{ inputs.WEBAPP_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --subscription ${{inputs.AZURE_SUBSCRIPTION_ID}}
 
      - uses: azure/appservice-settings@v1
        with:
-        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        app-name: ${{ inputs.WEBAPP_NAME }}
         mask-inputs: false
         general-settings-json: '{"linuxFxVersion": "PYTHON|${{ env.PYTHON_VERSION }}"}' #'General configuration settings as Key Value pairs'
         app-settings-json: |
@@ -85,7 +85,7 @@ runs:
      - name: Deploy web app container
        uses: azure/webapps-deploy@v2       
        with:
-          app-name: ${{env.AZURE_WEBAPP_NAME}}
+          app-name: ${{ inputs.WEBAPP_NAME }}
           package: ${{ env.WORKING_DIRECTORY }}
           images: ${{env.IMAGE_REGISTRY_URL}}/${{ env.REPOSITORY_NAME }}/${{env.DOCKER_IMAGE_NAME}}:latest
           startup-command: ${{ env.STARTUP_COMMAND }}
