@@ -38,6 +38,7 @@ name: "Deploy App to azure"
 
 runs:
    using: "composite"
+   shell: bash
    steps:
      - name: Azure login
        uses: azure/login@v1
