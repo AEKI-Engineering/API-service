@@ -1,103 +1,100 @@
 name: "Deploy App to azure"
 inputs:
-   AZURE_CONTAINER_CREDENTIALS:
-      required: true
-   IMAGE_REGISTRY_URL:
-      required: true
-   REGISTRY_USERNAME:
-      required: true
-   REGISTRY_PASSWORD:
-      required: true
-   AZURE_LOCATION:
-      required: true
-   AZURE_RESOURCE_GROUP:
-      required: true
-   AZURE_SUBSCRIPTION_ID:
-      required: true
-   AZURE_APP_PLAN:
-      required: true
-   AZURE_WEBAPP_NAME:
-      required: true
-   PYTHON_VERSION:
-      required: false
-      default: 3.10
-   REGISTRY_PASSWORD:
-      required: true
-   IMAGE_REGISTRY_URL:
-      required: true
-   REGISTRY_USERNAME:
-      required: true
-   WANDB_API_KEY:
-      required: true
-   REPOSITORY_NAME:
-      required: true
-   DOCKER_IMAGE_NAME:
-      required: true
-   CR_PAT:
-      required: true
+#    AZURE_CONTAINER_CREDENTIALS:
+#       required: true
+#    IMAGE_REGISTRY_URL:
+#       required: true
+#    REGISTRY_USERNAME:
+#       required: true
+#    REGISTRY_PASSWORD:
+#       required: true
+#    AZURE_LOCATION:
+#       required: true
+#    AZURE_RESOURCE_GROUP:
+#       required: true
+#    AZURE_SUBSCRIPTION_ID:
+#       required: true
+#    AZURE_APP_PLAN:
+#       required: true
+#    AZURE_WEBAPP_NAME:
+#       required: true
+#    PYTHON_VERSION:
+#       required: false
+#       default: 3.10
+#    REGISTRY_PASSWORD:
+#       required: true
+#    IMAGE_REGISTRY_URL:
+#       required: true
+#    REGISTRY_USERNAME:
+#       required: true
+#    WANDB_API_KEY:
+#       required: true
+#    REPOSITORY_NAME:
+#       required: true
+#    DOCKER_IMAGE_NAME:
+#       required: true
+#    CR_PAT:
+#       required: true
 
 runs:
    using: "composite"
    steps:
-     - name: Checkout repository
-       uses: actions/checkout@v2
-       
-     - name: Azure login
+    - name: Azure login
        uses: azure/login@v1
        with:
-         creds: ${{ inputs.AZURE_CONTAINER_CREDENTIALS }}
+         creds: ${{ secrets.AZURE_CONTAINER_CREDENTIALS }}
          
      - uses: azure/docker-login@v1
        with:
-          login-server: ${{inputs.IMAGE_REGISTRY_URL}}
-          username: ${{ inputs.REGISTRY_USERNAME }}
-          password: ${{ inputs.REGISTRY_PASSWORD }}
+          login-server: ${{env.IMAGE_REGISTRY_URL}}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
           
      - name: Create Azure resource group
        if: success()
        run: |
-         az group create --location ${{inputs.AZURE_LOCATION}} --name ${{inputs.AZURE_RESOURCE_GROUP}} --subscription ${{inputs.AZURE_SUBSCRIPTION_ID}}
+         az group create --location ${{env.AZURE_LOCATION}} --name ${{env.AZURE_RESOURCE_GROUP}} --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
  
      - name: Create Azure app service plan
        if: success()
        run: |
-         az appservice plan create --resource-group ${{inputs.AZURE_RESOURCE_GROUP}} --name ${{inputs.AZURE_APP_PLAN}} --is-linux --sku F1 --subscription ${{inputs.AZURE_SUBSCRIPTION_ID}}
+         az appservice plan create --resource-group ${{env.AZURE_RESOURCE_GROUP}} --name ${{env.AZURE_APP_PLAN}} --is-linux --sku F1 --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
  
      - name: Create webapp resource
        if: success()
        run: |
-         az webapp create --resource-group ${{ inputs.AZURE_RESOURCE_GROUP }} --plan ${{ inputs.AZURE_APP_PLAN }} --name ${{ inputs.AZURE_WEBAPP_NAME }}  --deployment-container-image-name nginx --subscription ${{inputs.AZURE_SUBSCRIPTION_ID}}
+         az webapp create --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --plan ${{ env.AZURE_APP_PLAN }} --name ${{ env.AZURE_WEBAPP_NAME }}  --deployment-container-image-name nginx --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
 
      - name: Configure webapp to use GHCR
        if: success()
        run: |
-         az webapp config container set --docker-custom-image-name nginx --docker-registry-server-password ${{ inputs.CR_PAT }} --docker-registry-server-url https://${{inputs.IMAGE_REGISTRY_URL}} --docker-registry-server-user ${{github.actor}} --name ${{ inputs.AZURE_WEBAPP_NAME }} --resource-group ${{ inputs.AZURE_RESOURCE_GROUP }} --subscription ${{inputs.AZURE_SUBSCRIPTION_ID}}
+         az webapp config container set --docker-custom-image-name nginx --docker-registry-server-password ${{secrets.CR_PAT}} --docker-registry-server-url https://${{env.IMAGE_REGISTRY_URL}} --docker-registry-server-user ${{github.actor}} --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
 
      - uses: azure/appservice-settings@v1
        with:
-        app-name: ${{ inputs.AZURE_WEBAPP_NAME }}
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
         mask-inputs: false
-        general-settings-json: '{"linuxFxVersion": "PYTHON|${{ inputs.PYTHON_VERSION }}"}' #'General configuration settings as Key Value pairs'
+        general-settings-json: '{"linuxFxVersion": "PYTHON|${{ env.PYTHON_VERSION }}"}' #'General configuration settings as Key Value pairs'
         app-settings-json: |
          [
              {
                  "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
-                 "value": "${{ inputs.REGISTRY_PASSWORD }}",
+                 "value": "${{ secrets.REGISTRY_PASSWORD }}",
                  "slotSetting": false
              },
              {
                  "name": "DOCKER_REGISTRY_SERVER_URL",
-                 "value": "${{ inputs.IMAGE_REGISTRY_URL }}",
+                 "value": "${{ env.IMAGE_REGISTRY_URL }}",
                  "slotSetting": false
              },
              {
                  "name": "DOCKER_REGISTRY_SERVER_USERNAME",
-                 "value": "${{ inputs.REGISTRY_USERNAME  }}",
+                 "value": "${{ secrets.REGISTRY_USERNAME  }}",
                  "slotSetting": false
              },
              {
                  "name": "WANDB_API_KEY",
-                 "value": "${{ inputs.WANDB_API_KEY }}",
+                 "value": "${{ secrets.WANDB_API_KEY }}",
                  "slotSetting": false
              }
          ]
@@ -105,11 +102,85 @@ runs:
      - name: Deploy web app container
        uses: azure/webapps-deploy@v2       
        with:
-          app-name: ${{ inputs.AZURE_WEBAPP_NAME }}
-          package: ${{ inputs.WORKING_DIRECTORY }}
-          images: ${{ inputs.IMAGE_REGISTRY_URL }}/${{ inputs.REPOSITORY_NAME }}/${{ inputs.DOCKER_IMAGE_NAME }}:latest
-          startup-command: ${{ inputs.STARTUP_COMMAND }}
+          app-name: ${{env.AZURE_WEBAPP_NAME}}
+          package: ${{ env.WORKING_DIRECTORY }}
+          images: ${{env.IMAGE_REGISTRY_URL}}/${{ env.REPOSITORY_NAME }}/${{env.DOCKER_IMAGE_NAME}}:latest
+          startup-command: ${{ env.STARTUP_COMMAND }}
 
      - name: Azure logout
        run: |
          az logout
+#      - name: Checkout repository
+#        uses: actions/checkout@v2
+       
+#      - name: Azure login
+#        uses: azure/login@v1
+#        with:
+#          creds: ${{ inputs.AZURE_CONTAINER_CREDENTIALS }}
+         
+#      - uses: azure/docker-login@v1
+#        with:
+#           login-server: ${{inputs.IMAGE_REGISTRY_URL}}
+#           username: ${{ inputs.REGISTRY_USERNAME }}
+#           password: ${{ inputs.REGISTRY_PASSWORD }}
+          
+#      - name: Create Azure resource group
+#        if: success()
+#        run: |
+#          az group create --location ${{inputs.AZURE_LOCATION}} --name ${{inputs.AZURE_RESOURCE_GROUP}} --subscription ${{inputs.AZURE_SUBSCRIPTION_ID}}
+ 
+#      - name: Create Azure app service plan
+#        if: success()
+#        run: |
+#          az appservice plan create --resource-group ${{inputs.AZURE_RESOURCE_GROUP}} --name ${{inputs.AZURE_APP_PLAN}} --is-linux --sku F1 --subscription ${{inputs.AZURE_SUBSCRIPTION_ID}}
+ 
+#      - name: Create webapp resource
+#        if: success()
+#        run: |
+#          az webapp create --resource-group ${{ inputs.AZURE_RESOURCE_GROUP }} --plan ${{ inputs.AZURE_APP_PLAN }} --name ${{ inputs.AZURE_WEBAPP_NAME }}  --deployment-container-image-name nginx --subscription ${{inputs.AZURE_SUBSCRIPTION_ID}}
+
+#      - name: Configure webapp to use GHCR
+#        if: success()
+#        run: |
+#          az webapp config container set --docker-custom-image-name nginx --docker-registry-server-password ${{ inputs.CR_PAT }} --docker-registry-server-url https://${{inputs.IMAGE_REGISTRY_URL}} --docker-registry-server-user ${{github.actor}} --name ${{ inputs.AZURE_WEBAPP_NAME }} --resource-group ${{ inputs.AZURE_RESOURCE_GROUP }} --subscription ${{inputs.AZURE_SUBSCRIPTION_ID}}
+
+#      - uses: azure/appservice-settings@v1
+#        with:
+#         app-name: ${{ inputs.AZURE_WEBAPP_NAME }}
+#         mask-inputs: false
+#         general-settings-json: '{"linuxFxVersion": "PYTHON|${{ inputs.PYTHON_VERSION }}"}' #'General configuration settings as Key Value pairs'
+#         app-settings-json: |
+#          [
+#              {
+#                  "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
+#                  "value": "${{ inputs.REGISTRY_PASSWORD }}",
+#                  "slotSetting": false
+#              },
+#              {
+#                  "name": "DOCKER_REGISTRY_SERVER_URL",
+#                  "value": "${{ inputs.IMAGE_REGISTRY_URL }}",
+#                  "slotSetting": false
+#              },
+#              {
+#                  "name": "DOCKER_REGISTRY_SERVER_USERNAME",
+#                  "value": "${{ inputs.REGISTRY_USERNAME  }}",
+#                  "slotSetting": false
+#              },
+#              {
+#                  "name": "WANDB_API_KEY",
+#                  "value": "${{ inputs.WANDB_API_KEY }}",
+#                  "slotSetting": false
+#              }
+#          ]
+      
+#      - name: Deploy web app container
+#        uses: azure/webapps-deploy@v2       
+#        with:
+#           app-name: ${{ inputs.AZURE_WEBAPP_NAME }}
+#           package: ${{ inputs.WORKING_DIRECTORY }}
+#           images: ${{ inputs.IMAGE_REGISTRY_URL }}/${{ inputs.REPOSITORY_NAME }}/${{ inputs.DOCKER_IMAGE_NAME }}:latest
+#           startup-command: ${{ inputs.STARTUP_COMMAND }}
+
+#      - name: Azure logout
+#        run: |
+#          az logout
