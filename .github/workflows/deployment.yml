@@ -71,7 +71,8 @@ jobs:
          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}        
          CR_PAT: ${{secrets.CR_PAT}}
-                
+         WEBAPP_NAME: ${{ env.AZURE_WEBAPP_NAME }}
+         
      - name: Deploy test
        if: contains(github.event.pull_request.labels.*.name, 'Deploy Test')
        uses: ./.github/actions/deploy-to-azure
