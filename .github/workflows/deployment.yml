@@ -61,23 +61,22 @@ jobs:
      - name: Checkout repository
        uses: actions/checkout@v2
        
-    -  name: Deploy
-        uses: ./.github/actions/deploy-to-azure
-        with:
-          AZURE_CONTAINER_CREDENTIALS: ${{ secrets.AZURE_CONTAINER_CREDENTIALS }}
-          IMAGE_REGISTRY_URL: ${{ env.IMAGE_REGISTRY_URL }}
-          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
-          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
-          AZURE_LOCATION: ${{ env.AZURE_LOCATION }}
-          AZURE_RESOURCE_GROUP: ${{ env.AZURE_RESOURCE_GROUP }}
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          AZURE_APP_PLAN: ${{ env.AZURE_APP_PLAN }}
-          AZURE_WEBAPP_NAME: ${{ env.AZURE_WEBAPP_NAME }}
-          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
-          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
-          REPOSITORY_NAME: ${{ env.REPOSITORY_NAME }}
-          DOCKER_IMAGE_NAME: ${{ env.DOCKER_IMAGE_NAME }}
-          CR_PAT: ${{secrets.CR_PAT}}
+     - name: Deploy
+       uses: ./.github/actions/deploy-to-azure
+       with:
+         AZURE_CONTAINER_CREDENTIALS: ${{ secrets.AZURE_CONTAINER_CREDENTIALS }}
+         IMAGE_REGISTRY_URL: ${{ env.IMAGE_REGISTRY_URL }}
+         REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+         AZURE_LOCATION: ${{ env.AZURE_LOCATION }}
+         AZURE_RESOURCE_GROUP: ${{ env.AZURE_RESOURCE_GROUP }}
+         AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+         AZURE_APP_PLAN: ${{ env.AZURE_APP_PLAN }}
+         AZURE_WEBAPP_NAME: ${{ env.AZURE_WEBAPP_NAME }}
+         REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+         WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+         REPOSITORY_NAME: ${{ env.REPOSITORY_NAME }}
+         DOCKER_IMAGE_NAME: ${{ env.DOCKER_IMAGE_NAME }}
+         CR_PAT: ${{secrets.CR_PAT}}
 
     #  - name: Azure login
     #    uses: azure/login@v1
