@@ -1,44 +1,20 @@
 name: "Deploy App to azure"
-# inputs:
-#    AZURE_CONTAINER_CREDENTIALS:
-#       required: true
-#    IMAGE_REGISTRY_URL:
-#       required: true
-#    REGISTRY_USERNAME:
-#       required: true
-#    REGISTRY_PASSWORD:
-#       required: true
-#    AZURE_LOCATION:
-#       required: true
-#    AZURE_RESOURCE_GROUP:
-#       required: true
-#    AZURE_SUBSCRIPTION_ID:
-#       required: true
-#    AZURE_APP_PLAN:
-#       required: true
-#    AZURE_WEBAPP_NAME:
-#       required: true
-#    PYTHON_VERSION:
-#       required: false
-#       default: 3.10
-#    REGISTRY_PASSWORD:
-#       required: true
-#    IMAGE_REGISTRY_URL:
-#       required: true
-#    REGISTRY_USERNAME:
-#       required: true
-#    WANDB_API_KEY:
-#       required: true
-#    REPOSITORY_NAME:
-#       required: true
-#    DOCKER_IMAGE_NAME:
-#       required: true
-#    CR_PAT:
-#       required: true
+inputs:
+   AZURE_CONTAINER_CREDENTIALS:
+      required: true
+   AZURE_SUBSCRIPTION_ID:
+      required: true
+   REGISTRY_PASSWORD:
+      required: true
+   REGISTRY_USERNAME:
+      required: true
+   WANDB_API_KEY:
+      required: true
+   CR_PAT:
+      required: true
 
 runs:
    using: "composite"
-   shell: bash
    steps:
      - name: Azure login
        uses: azure/login@v1
@@ -52,21 +28,25 @@ runs:
           password: ${{ secrets.REGISTRY_PASSWORD }}
           
      - name: Create Azure resource group
+       shell: bash
        if: success()
        run: |
          az group create --location ${{env.AZURE_LOCATION}} --name ${{env.AZURE_RESOURCE_GROUP}} --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
  
      - name: Create Azure app service plan
+       shell: bash  
        if: success()
        run: |
          az appservice plan create --resource-group ${{env.AZURE_RESOURCE_GROUP}} --name ${{env.AZURE_APP_PLAN}} --is-linux --sku F1 --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
  
      - name: Create webapp resource
+       shell: bash
        if: success()
        run: |
          az webapp create --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --plan ${{ env.AZURE_APP_PLAN }} --name ${{ env.AZURE_WEBAPP_NAME }}  --deployment-container-image-name nginx --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
 
      - name: Configure webapp to use GHCR
+       shell: bash
        if: success()
        run: |
          az webapp config container set --docker-custom-image-name nginx --docker-registry-server-password ${{secrets.CR_PAT}} --docker-registry-server-url https://${{env.IMAGE_REGISTRY_URL}} --docker-registry-server-user ${{github.actor}} --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
@@ -109,6 +89,7 @@ runs:
           startup-command: ${{ env.STARTUP_COMMAND }}
 
      - name: Azure logout
+       shell: bash
        run: |
          az logout
 #      - name: Checkout repository
