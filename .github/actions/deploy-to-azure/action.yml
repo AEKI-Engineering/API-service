@@ -1,5 +1,5 @@
 name: "Deploy App to azure"
-inputs:
+# inputs:
 #    AZURE_CONTAINER_CREDENTIALS:
 #       required: true
 #    IMAGE_REGISTRY_URL:
