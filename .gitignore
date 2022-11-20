@@ -134,3 +134,6 @@ models/*
 
 # Local files
 local/*
+
+# MacOS
+.DS_Store
