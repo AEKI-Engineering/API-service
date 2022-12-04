@@ -5,16 +5,19 @@ on:
    types: [labeled]
  
 env:
+ REPOSITORY_NAME: 'aeki-engineering/api-service'
+ 
  IMAGE_REGISTRY_URL: aekiengineering.azurecr.io
+ DOCKER_IMAGE_NAME: aeki-api-service-azure
+ 
  AZURE_RESOURCE_GROUP: aeki-with-actions
  AZURE_APP_PLAN: aeki-api-service-deployment
  AZURE_LOCATION: '"Central US"'
  AZURE_WEBAPP_NAME: aeki-api-service
- DOCKER_IMAGE_NAME: aeki-api-service-azure
+ 
  PYTHON_VERSION: '3.10' 
  WORKING_DIRECTORY: '.'
  STARTUP_COMMAND: ''
- REPOSITORY_NAME: 'aeki-engineering/api-service'
  
 jobs:
   Build-Docker-Image:
@@ -25,11 +28,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-#       - name: Set up Docker Buildx
-#         uses: docker/setup-buildx-action@v2
-#         with:
-#           platform: "linux/amd64"
 
       - name: Log in to Container Registry
         uses: azure/docker-login@v1
@@ -57,84 +55,36 @@ jobs:
    runs-on: ubuntu-latest
    needs: Build-Docker-Image
    
-   if: contains(github.event.pull_request.labels.*.name, 'spin up environment')
+   
  
    steps:
      - name: Checkout repository
        uses: actions/checkout@v2
        
-     - name: Azure login
-       uses: azure/login@v1
+     - name: Deploy production
+       if: contains(github.event.pull_request.labels.*.name, 'Deploy Prod')
+       uses: ./.github/actions/deploy-to-azure
        with:
-         creds: ${{ secrets.AZURE_CONTAINER_CREDENTIALS }}
+         AZURE_CONTAINER_CREDENTIALS: ${{ secrets.AZURE_CONTAINER_CREDENTIALS }}
+         REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+         AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+         REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+         WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}        
+         CR_PAT: ${{secrets.CR_PAT}}
+         WEBAPP_NAME: ${{ env.AZURE_WEBAPP_NAME }}
          
-     - uses: azure/docker-login@v1
+     - name: Deploy test
+       if: contains(github.event.pull_request.labels.*.name, 'Deploy Test')
+       uses: ./.github/actions/deploy-to-azure
        with:
-          login-server: ${{env.IMAGE_REGISTRY_URL}}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
-          
-     - name: Create Azure resource group
-       if: success()
-       run: |
-         az group create --location ${{env.AZURE_LOCATION}} --name ${{env.AZURE_RESOURCE_GROUP}} --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
- 
-     - name: Create Azure app service plan
-       if: success()
-       run: |
-         az appservice plan create --resource-group ${{env.AZURE_RESOURCE_GROUP}} --name ${{env.AZURE_APP_PLAN}} --is-linux --sku F1 --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
- 
-     - name: Create webapp resource
-       if: success()
-       run: |
-         az webapp create --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --plan ${{ env.AZURE_APP_PLAN }} --name ${{ env.AZURE_WEBAPP_NAME }}  --deployment-container-image-name nginx --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
+         AZURE_CONTAINER_CREDENTIALS: ${{ secrets.AZURE_CONTAINER_CREDENTIALS }}
+         REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+         AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+         REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+         WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}        
+         CR_PAT: ${{secrets.CR_PAT}}
+         WEBAPP_NAME: ${{ env.AZURE_WEBAPP_NAME }}-test
 
-     - name: Configure webapp to use GHCR
-       if: success()
-       run: |
-         az webapp config container set --docker-custom-image-name nginx --docker-registry-server-password ${{secrets.CR_PAT}} --docker-registry-server-url https://${{env.IMAGE_REGISTRY_URL}} --docker-registry-server-user ${{github.actor}} --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
-
-     - uses: azure/appservice-settings@v1
-       with:
-        app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        mask-inputs: false
-        general-settings-json: '{"linuxFxVersion": "PYTHON|${{ env.PYTHON_VERSION }}"}' #'General configuration settings as Key Value pairs'
-        app-settings-json: |
-         [
-             {
-                 "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
-                 "value": "${{ secrets.REGISTRY_PASSWORD }}",
-                 "slotSetting": false
-             },
-             {
-                 "name": "DOCKER_REGISTRY_SERVER_URL",
-                 "value": "${{ env.IMAGE_REGISTRY_URL }}",
-                 "slotSetting": false
-             },
-             {
-                 "name": "DOCKER_REGISTRY_SERVER_USERNAME",
-                 "value": "${{ secrets.REGISTRY_USERNAME  }}",
-                 "slotSetting": false
-             },
-             {
-                 "name": "WANDB_API_KEY",
-                 "value": "${{ secrets.WANDB_API_KEY }}",
-                 "slotSetting": false
-             }
-         ]
-      
-     - name: Deploy web app container
-       uses: azure/webapps-deploy@v2       
-       with:
-          app-name: ${{env.AZURE_WEBAPP_NAME}}
-          package: ${{ env.WORKING_DIRECTORY }}
-          images: ${{env.IMAGE_REGISTRY_URL}}/${{ env.REPOSITORY_NAME }}/${{env.DOCKER_IMAGE_NAME}}:latest
-          startup-command: ${{ env.STARTUP_COMMAND }}
-
-     - name: Azure logout
-       run: |
-         az logout
- 
   destroy-azure-resources:
    runs-on: ubuntu-latest
  

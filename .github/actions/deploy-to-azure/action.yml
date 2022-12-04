@@ -1,0 +1,96 @@
+name: "Deploy App to azure"
+inputs:
+   WEBAPP_NAME:
+      required: true     
+   AZURE_CONTAINER_CREDENTIALS:
+      required: true
+   AZURE_SUBSCRIPTION_ID:
+      required: true
+   REGISTRY_PASSWORD:
+      required: true
+   REGISTRY_USERNAME:
+      required: true
+   WANDB_API_KEY:
+      required: true
+   CR_PAT:
+      required: true
+
+runs:
+   using: "composite"
+   steps:
+     - name: Azure login
+       uses: azure/login@v1
+       with:
+         creds: ${{ inputs.AZURE_CONTAINER_CREDENTIALS }}
+         
+     - uses: azure/docker-login@v1
+       with:
+          login-server: ${{env.IMAGE_REGISTRY_URL}}
+          username: ${{ inputs.REGISTRY_USERNAME }}
+          password: ${{ inputs.REGISTRY_PASSWORD }}
+          
+     - name: Create Azure resource group
+       shell: bash
+       if: success()
+       run: |
+         az group create --location ${{env.AZURE_LOCATION}} --name ${{env.AZURE_RESOURCE_GROUP}} --subscription ${{inputs.AZURE_SUBSCRIPTION_ID}}
+ 
+     - name: Create Azure app service plan
+       shell: bash  
+       if: success()
+       run: |
+         az appservice plan create --resource-group ${{env.AZURE_RESOURCE_GROUP}} --name ${{env.AZURE_APP_PLAN}} --is-linux --sku F1 --subscription ${{inputs.AZURE_SUBSCRIPTION_ID}}
+ 
+     - name: Create webapp resource
+       shell: bash
+       if: success()
+       run: |
+         az webapp create --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --plan ${{ env.AZURE_APP_PLAN }} --name ${{ inputs.WEBAPP_NAME }}  --deployment-container-image-name nginx --subscription ${{inputs.AZURE_SUBSCRIPTION_ID}}
+
+     - name: Configure webapp to use GHCR
+       shell: bash
+       if: success()
+       run: |
+         az webapp config container set --docker-custom-image-name nginx --docker-registry-server-password ${{inputs.CR_PAT}} --docker-registry-server-url https://${{env.IMAGE_REGISTRY_URL}} --docker-registry-server-user ${{github.actor}} --name ${{ inputs.WEBAPP_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --subscription ${{inputs.AZURE_SUBSCRIPTION_ID}}
+
+     - uses: azure/appservice-settings@v1
+       with:
+        app-name: ${{ inputs.WEBAPP_NAME }}
+        mask-inputs: false
+        general-settings-json: '{"linuxFxVersion": "PYTHON|${{ env.PYTHON_VERSION }}"}' #'General configuration settings as Key Value pairs'
+        app-settings-json: |
+         [
+             {
+                 "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
+                 "value": "${{ inputs.REGISTRY_PASSWORD }}",
+                 "slotSetting": false
+             },
+             {
+                 "name": "DOCKER_REGISTRY_SERVER_URL",
+                 "value": "${{ env.IMAGE_REGISTRY_URL }}",
+                 "slotSetting": false
+             },
+             {
+                 "name": "DOCKER_REGISTRY_SERVER_USERNAME",
+                 "value": "${{ inputs.REGISTRY_USERNAME  }}",
+                 "slotSetting": false
+             },
+             {
+                 "name": "WANDB_API_KEY",
+                 "value": "${{ inputs.WANDB_API_KEY }}",
+                 "slotSetting": false
+             }
+         ]
+      
+     - name: Deploy web app container
+       uses: azure/webapps-deploy@v2       
+       with:
+          app-name: ${{ inputs.WEBAPP_NAME }}
+          package: ${{ env.WORKING_DIRECTORY }}
+          images: ${{env.IMAGE_REGISTRY_URL}}/${{ env.REPOSITORY_NAME }}/${{env.DOCKER_IMAGE_NAME}}:latest
+          startup-command: ${{ env.STARTUP_COMMAND }}
+
+     - name: Azure logout
+       shell: bash
+       run: |
+         az logout
